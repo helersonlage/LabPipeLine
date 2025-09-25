@@ -1,8 +1,12 @@
 # azure-pipelines.yml
-# CI for ASP.NET Core (.NET 8) - runs only on pushes/merges to the "master" branch
+# CI for ASP.NET Core (.NET 8)
+# Runs on push/merge to master and on Pull Requests targeting master
 
 trigger:
-- master
+- master  # runs after merge/push to master
+
+pr:
+- master  # runs on PRs targeting master
 
 pool:
   vmImage: 'windows-latest'
@@ -12,7 +16,7 @@ variables:
   artifactName: 'drop'
 
 steps:
-# 1) Checkout repository (with clean)
+# 1) Checkout repository (clean)
 - checkout: self
   clean: true
 
@@ -23,24 +27,31 @@ steps:
     packageType: 'sdk'
     version: '8.0.x'
 
-# 3) Restore dependencies
+# 3) Restore dependencies using the installed SDK
 - script: dotnet restore
   displayName: 'Restore dependencies'
+  env:
+    DOTNET_ROOT: $(Agent.ToolsDirectory)/dotnet
 
-# 4) Build solution in Release mode (without restore)
+# 4) Build solution
 - script: dotnet build --configuration $(buildConfiguration) --no-restore --verbosity minimal
   displayName: 'Build solution'
+  env:
+    DOTNET_ROOT: $(Agent.ToolsDirectory)/dotnet
 
-# 5) Run unit tests (if test projects exist)
-#    If you don’t have tests, you can comment/remove this step
+# 5) Run unit tests
 - script: dotnet test --configuration $(buildConfiguration) --no-build --verbosity normal
   displayName: 'Run unit tests'
+  env:
+    DOTNET_ROOT: $(Agent.ToolsDirectory)/dotnet
 
 # 6) Publish project (creates output ready for deployment)
 - script: dotnet publish --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/publish
   displayName: 'Publish project'
+  env:
+    DOTNET_ROOT: $(Agent.ToolsDirectory)/dotnet
 
-# 7) Publish build artifacts (can be used for deployment later)
+# 7) Publish build artifacts for deployment
 - task: PublishBuildArtifacts@1
   displayName: 'Publish build artifacts'
   inputs:
