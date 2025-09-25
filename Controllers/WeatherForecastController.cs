@@ -37,8 +37,6 @@ namespace LabPipeLine.Controllers
             return Enumerable.Range(1, days)
                 .Select(index => DateTime.Now.AddDays(index).ToString("yyyy-MM-dd HH:mm:ss"))
                 .ToArray();
-
-
         }
 
     }
