@@ -1,42 +1,49 @@
-# ASP.NET Core (.NET 7)
-# Build and test .NET 7 projects
-# Add steps for publishing/deployment if needed
+# azure-pipelines.yml
+# CI for ASP.NET Core (.NET 8) - runs only on pushes/merges to the "master" branch
 
 trigger:
-- main   # altera se sua branch principal for "master"
+- master
 
 pool:
   vmImage: 'windows-latest'
 
 variables:
   buildConfiguration: 'Release'
+  artifactName: 'drop'
 
 steps:
-# Instala SDK do .NET 7
+# 1) Checkout repository (with clean)
+- checkout: self
+  clean: true
+
+# 2) Install .NET 8 SDK
 - task: UseDotNet@2
+  displayName: 'Use .NET SDK 8'
   inputs:
     packageType: 'sdk'
     version: '8.0.x'
 
-# Restaura pacotes
+# 3) Restore dependencies
 - script: dotnet restore
   displayName: 'Restore dependencies'
 
-# Compila a solução em Release
-- script: dotnet build --configuration $(buildConfiguration) --no-restore
+# 4) Build solution in Release mode (without restore)
+- script: dotnet build --configuration $(buildConfiguration) --no-restore --verbosity minimal
   displayName: 'Build solution'
 
-# Roda testes unitários (se houver projeto de testes)
+# 5) Run unit tests (if test projects exist)
+#    If you don’t have tests, you can comment/remove this step
 - script: dotnet test --configuration $(buildConfiguration) --no-build --verbosity normal
   displayName: 'Run unit tests'
 
-# Publica artefato (gera pasta "publish" para deploy)
-- script: dotnet publish --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+# 6) Publish project (creates output ready for deployment)
+- script: dotnet publish --configuration $(buildConfiguration) --no-build --output $(Build.ArtifactStagingDirectory)/publish
   displayName: 'Publish project'
 
-# Salva artefato gerado (pode ser usado em deploy posterior)
+# 7) Publish build artifacts (can be used for deployment later)
 - task: PublishBuildArtifacts@1
+  displayName: 'Publish build artifacts'
   inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/publish'
+    ArtifactName: '$(artifactName)'
     publishLocation: 'Container'
