@@ -1,4 +1,5 @@
 using LabPipeLine.Controllers;
+using Xunit;
 
 namespace LabPipeLine.Tests
 {
