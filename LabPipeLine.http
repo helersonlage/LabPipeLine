@@ -1,0 +1,6 @@
+@LabPipeLine_HostAddress = http://localhost:5078
+
+GET {{LabPipeLine_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
