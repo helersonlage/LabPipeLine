@@ -31,17 +31,13 @@ namespace LabPipeLine.Controllers
         }
 
         [HttpGet(Name = "GetTime")]
-        public IEnumerable<string> GetTime()
+        public IEnumerable<string> GetTime(int days)
         {
-            // Return current time strings for the next 5 days
-            return Enumerable.Range(1, 5)
+            // Return current time strings for the next numbers das on parameter            
+            return Enumerable.Range(1, days)
                 .Select(index => DateTime.Now.AddDays(index).ToString("yyyy-MM-dd HH:mm:ss"))
                 .ToArray();
         }
-
-
-
-
 
     }
 }
