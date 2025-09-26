@@ -1,38 +1,47 @@
 trigger:
-- master
+- master   # or main
 
 pool:
   vmImage: 'windows-latest'
 
 variables:
-  solution: '**/*.sln'
-  buildPlatform: 'Any CPU'
   buildConfiguration: 'Release'
 
 steps:
-# Install NuGet
+# 1. Install NuGet
 - task: NuGetToolInstaller@1
 
-# Restore NuGet packages
+# 2. Restore dependencies
 - task: NuGetCommand@2
   inputs:
-    restoreSolution: '$(solution)'
+    restoreSolution: '**/*.sln'
 
-# Build solution
-- task: VSBuild@1
+# 3. Build solution
+- task: DotNetCoreCLI@2
+  displayName: 'Build project'
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
 
-# Run tests
-- task: VSTest@2
+# 4. Run tests
+- task: DotNetCoreCLI@2
+  displayName: 'Run unit tests'
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: 'test'
+    projects: '**/*Tests/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
 
-# Publish build output as artifact
+# 5. Publish (creates deployable package)
+- task: DotNetCoreCLI@2
+  displayName: 'Publish project'
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
+    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+    zipAfterPublish: true
+
+# 6. Publish build output as artifact
 - task: PublishBuildArtifacts@1
   displayName: 'Publish build artifacts'
   inputs:
@@ -40,10 +49,10 @@ steps:
     ArtifactName: 'drop'
     publishLocation: 'Container'
 
-# DevOpsLabConnection-Prod
-# Deploy to Azure App Service
+# 7. Deploy to Azure App Service
 - task: AzureWebApp@1
+  displayName: 'Deploy to Azure Web App'
   inputs:
-    azureSubscription: 'DevOpsLabConnection-Prod'
-    appName: 'WebApiDev'
+    azureSubscription: 'DevOpsLabConnection-Prod'   # 👈 replace with your service connection name
+    appName: 'WebApiDev'                            # 👈 replace with your Azure Web App name
     package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
