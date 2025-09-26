@@ -1,4 +1,3 @@
-using LabPipeLine.Controllers;
 using Xunit;
 
 namespace LabPipeLine.Tests
@@ -20,7 +19,7 @@ namespace LabPipeLine.Tests
         public void Get_ReturnsFiveWeatherForecasts()
         {
             // Act
-            var result = _controller.Get();
+            var result = _controller.GetForecast();
 
             // Assert
             Assert.NotNull(result);
