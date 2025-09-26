@@ -44,6 +44,6 @@ steps:
 # Deploy to Azure App Service
 - task: AzureWebApp@1
   inputs:
-    azureSubscription: 'DevOpsLabConnection-Prod'   # 👈 replace with your service connection name
-    appName: 'WebApiDev'                       # 👈 replace with your Azure Web App name
-    package: '$(Pipeline.Workspace)/drop/**/*.zip'  # safer path for deployment
+    azureSubscription: 'DevOpsLabConnection-Prod'
+    appName: 'WebApiDev'
+    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
