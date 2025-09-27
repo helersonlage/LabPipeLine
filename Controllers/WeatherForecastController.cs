@@ -6,7 +6,7 @@ public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries =
     {
-        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+        "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching", "Very Hot"
     };
 
     private readonly ILogger<WeatherForecastController> _logger;
@@ -37,6 +37,7 @@ public class WeatherForecastController : ControllerBase
             .Select(index => DateTime.Now.AddDays(index).ToString("yyyy-MM-dd HH:mm:ss"))
             .ToArray();
     }
+
 }
 
 public class WeatherForecast
