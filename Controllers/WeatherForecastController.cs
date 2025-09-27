@@ -2,19 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/weather")]
-public class WeatherForecastController : ControllerBase
+public class WeatherForecastController(ILogger<WeatherForecastController> logger) : ControllerBase
 {
     private static readonly string[] Summaries =
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching", "Very Hot"
     };
 
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
-    {
-        _logger = logger;
-    }
+    private readonly ILogger<WeatherForecastController> _logger = logger;
 
     // GET api/weather/forecast
     [HttpGet("forecast")]
