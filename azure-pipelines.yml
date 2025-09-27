@@ -1,5 +1,12 @@
 trigger:
-- master   # or main
+  branches:
+    include:
+      - master   # only run full pipeline after merge into master
+
+pr:
+  branches:
+    include:
+      - master   # validate PRs targeting master
 
 pool:
   vmImage: 'windows-latest'
@@ -7,52 +14,79 @@ pool:
 variables:
   buildConfiguration: 'Release'
 
-steps:
-# 1. Install NuGet
-- task: NuGetToolInstaller@1
+stages:
+# 1. PR validation (build + test, no deploy)
+- stage: Validate
+  displayName: "PR Validation"
+  condition: eq(variables['Build.Reason'], 'PullRequest')
+  jobs:
+  - job: BuildAndTest
+    steps:
+    - task: NuGetToolInstaller@1
 
-# 2. Restore dependencies
-- task: NuGetCommand@2
-  inputs:
-    restoreSolution: '**/*.sln'
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '**/*.sln'
 
-# 3. Build solution
-- task: DotNetCoreCLI@2
-  displayName: 'Build project'
-  inputs:
-    command: 'build'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build project'
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
 
-# 4. Run tests
-- task: DotNetCoreCLI@2
-  displayName: 'Run unit tests'
-  inputs:
-    command: 'test'
-    projects: '**/*Tests/*.csproj'
-    arguments: '--configuration $(buildConfiguration)'
+    - task: DotNetCoreCLI@2
+      displayName: 'Run unit tests'
+      inputs:
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
 
-# 5. Publish (creates deployable package)
-- task: DotNetCoreCLI@2
-  displayName: 'Publish project'
-  inputs:
-    command: 'publish'
-    publishWebProjects: true
-    arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
-    zipAfterPublish: true
+# 2. Master build + deploy
+- stage: Deploy
+  displayName: "Build & Deploy to Azure"
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/master'))
+  jobs:
+  - job: BuildDeploy
+    steps:
+    - task: NuGetToolInstaller@1
 
-# 6. Publish build output as artifact
-- task: PublishBuildArtifacts@1
-  displayName: 'Publish build artifacts'
-  inputs:
-    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
-    ArtifactName: 'drop'
-    publishLocation: 'Container'
+    - task: NuGetCommand@2
+      inputs:
+        restoreSolution: '**/*.sln'
 
-# 7. Deploy to Azure App Service
-- task: AzureWebApp@1
-  displayName: 'Deploy to Azure Web App'
-  inputs:
-    azureSubscription: 'DevOpsLabConnection-Prod'   # 👈 replace with your service connection name
-    appName: 'WebApiDev'                            # 👈 replace with your Azure Web App name
-    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build project'
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Run unit tests'
+      inputs:
+        command: 'test'
+        projects: '**/*Tests/*.csproj'
+        arguments: '--configuration $(buildConfiguration)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'Publish project'
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish build artifacts'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+    - task: AzureWebApp@1
+      displayName: 'Deploy to Azure Web App'
+      inputs:
+        azureSubscription: 'DevOpsLabConnection-Prod'
+        appName: 'WebApiDev'
+        package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
