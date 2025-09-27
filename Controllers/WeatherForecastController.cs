@@ -37,6 +37,7 @@ public class WeatherForecastController : ControllerBase
             .Select(index => DateTime.Now.AddDays(index).ToString("yyyy-MM-dd HH:mm:ss"))
             .ToArray();
     }
+
 }
 
 public class WeatherForecast
