@@ -32,7 +32,6 @@ public class WeatherForecastController(ILogger<WeatherForecastController> logger
             .Select(index => DateTime.Now.AddDays(index).ToString("yyyy-MM-dd HH:mm:ss"))
             .ToArray();
     }
-
 }
 
 public class WeatherForecast
