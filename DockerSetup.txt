@@ -1,0 +1,12 @@
+$ docker build -t mydemoapi .
+docker run -d -p 8080:8080 mydemoapi
+
+
+docker run -d \
+  --name my-mysql \
+  -e MYSQL_ROOT_PASSWORD=Dado123@#$ \
+  -e MYSQL_DATABASE=myHelersonDb \
+  -e MYSQL_USER=app\
+  -e MYSQL_PASSWORD=app123!@# \
+  -p 3306:3306 \
+  mysql:8.0

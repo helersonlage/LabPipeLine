@@ -15,13 +15,12 @@ public class WeatherForecastController(ILogger<WeatherForecastController> logger
     [HttpGet("forecast")]
     public IEnumerable<WeatherForecast> GetForecast()
     {
-        return Enumerable.Range(1, 5).Select(index => new WeatherForecast
+        return [.. Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
             Date = DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
             TemperatureC = Random.Shared.Next(-20, 55),
             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
-        })
-        .ToArray();
+        })];
     }
 
     // GET api/weather/time?days=5
